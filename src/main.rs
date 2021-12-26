@@ -9,10 +9,10 @@ use regex::Regex;
 
 #[derive(Debug)]
 struct FormattedArgs {
-    file: String,
-    file_as_regex: Regex,
-    dirs: PathBuf,
-    exclude_dirs: Vec<Regex>,
+    files: String,
+    files_as_regex: Regex,
+    searched_directory: PathBuf,
+    excluded_dirs: Vec<Regex>,
 }
 
 fn format_path(path: String) -> String {
@@ -28,42 +28,42 @@ fn get_formatted_args(mut args: env::Args) -> FormattedArgs {
         }
         Some(n) => n
     };
-    let dirs = match args.next() {
+    let searched_directory = match args.next() {
         None => PathBuf::from(format_path(String::from("."))),
         Some(n) => PathBuf::from(format_path(n))
     };
-    let mut exclude_dirs = vec![];
-    let exclude_dirs_as_string = match args.next() {
+    let mut excluded_dirs = vec![];
+    let excluded_dirs_as_string = match args.next() {
         None => String::from(""),
         Some(n) => n
     };
 
-    for exclude_dir in exclude_dirs_as_string.split(",").by_ref().into_iter() {
-        if &exclude_dir != &"" {
-            exclude_dirs.push(Regex::new(exclude_dir).unwrap());
+    for excluded_dir in excluded_dirs_as_string.split(",").by_ref().into_iter() {
+        if &excluded_dir != &"" {
+            excluded_dirs.push(Regex::new(excluded_dir).unwrap());
         }
     }
     FormattedArgs {
-        file_as_regex: get_files_name_as_regex(&files),
-        file: files,
-        dirs,
-        exclude_dirs,
+        files_as_regex: get_files_name_as_regex(&files),
+        files,
+        searched_directory,
+        excluded_dirs,
     }
 }
 
-fn check_for_file(file: &String, file_as_regex: &Regex, path: &Path, exclude_dirs: &Vec<Regex>) {
-    if let Ok(entries) = fs::read_dir(path) {
+fn check_for_file(files: &String, files_as_regex: &Regex, searched_directory: &Path, excluded_dirs: &Vec<Regex>) {
+    if let Ok(entries) = fs::read_dir(searched_directory) {
         entries.par_bridge().for_each(|entry| {
             if let Ok(entry) = entry {
                 let metadata = match entry.metadata() {
                     Ok(n) => n,
                     Err(_) => return
                 };
-                if metadata.is_dir() && (exclude_dirs.len() == 0 || !exclude_dirs.iter().any(|p| { p.is_match(entry.path().to_str().unwrap()) })) {
-                    check_for_file(&file, &file_as_regex, &entry.path(), &exclude_dirs);
+                if metadata.is_dir() && (excluded_dirs.len() == 0 || !excluded_dirs.iter().any(|p| { p.is_match(entry.path().to_str().unwrap()) })) {
+                    check_for_file(&files, &files_as_regex, &entry.path(), &excluded_dirs);
                 }
                 let file_name = entry.file_name().into_string().unwrap();
-                if file_as_regex.is_match(&file_name) {
+                if files_as_regex.is_match(&file_name) {
                     println!("{}", entry.path().display().to_string());
                 }
             }
@@ -100,5 +100,5 @@ fn main() {
     setup();
     let args = get_formatted_args(env::args());
     // println!("{:#?}", args);
-    check_for_file(&args.file, &args.file_as_regex, &args.dirs, &args.exclude_dirs);
+    check_for_file(&args.files, &args.files_as_regex, &args.searched_directory, &args.excluded_dirs);
 }
