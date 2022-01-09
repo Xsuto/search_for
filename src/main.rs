@@ -15,7 +15,7 @@ struct Args {
     #[clap(short, long, default_value = "*")]
     name: String,
     #[clap(short, long, default_value = "")]
-    exclued_dirs: String,
+    excluded_dirs: String,
 }
 
 #[derive(Debug)]
@@ -33,7 +33,7 @@ fn get_formatted_args(args: Args) -> FormattedArgs {
     let searched_directory = PathBuf::from(format_path(args.dir));
     let mut excluded_dirs = vec![];
 
-    for excluded_dir in args.exclued_dirs.split(",").by_ref().into_iter() {
+    for excluded_dir in args.excluded_dirs.split(",").by_ref().into_iter() {
         if &excluded_dir != &"" {
             excluded_dirs.push(Regex::new(excluded_dir).unwrap());
         }
