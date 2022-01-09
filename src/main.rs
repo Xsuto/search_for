@@ -1,20 +1,20 @@
 use std::{env, fs, process};
 #[doc(inline)]
 pub use std;
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
+use clap::Parser;
 use rayon::prelude::*;
 use regex;
 use regex::Regex;
-use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[clap(about, version, author)]
 struct Args {
     dir: String,
-    #[clap(short,long,default_value="*")]
+    #[clap(short, long, default_value = "*")]
     name: String,
-    #[clap(short,long,default_value="")]
+    #[clap(short, long, default_value = "")]
     exclued_dirs: String,
 }
 
@@ -30,7 +30,7 @@ fn format_path(path: String) -> String {
 }
 
 fn get_formatted_args(args: Args) -> FormattedArgs {
-    let searched_directory =  PathBuf::from(format_path(args.dir));
+    let searched_directory = PathBuf::from(format_path(args.dir));
     let mut excluded_dirs = vec![];
 
     for excluded_dir in args.exclued_dirs.split(",").by_ref().into_iter() {
@@ -49,16 +49,14 @@ fn check_for_files(files_as_regex: &Regex, searched_directory: &PathBuf, exclude
     if let Ok(entries) = fs::read_dir(searched_directory) {
         entries.par_bridge().for_each(|entry| {
             if let Ok(entry) = entry {
-                let metadata = match entry.metadata() {
-                    Ok(n) => n,
-                    Err(_) => return
-                };
-                if metadata.is_dir() && (excluded_dirs.len() == 0 || !excluded_dirs.iter().any(|p| { p.is_match(entry.path().to_str().unwrap()) })) {
-                    check_for_files(&files_as_regex, &entry.path(), &excluded_dirs);
-                }
-                let file_name = entry.file_name().into_string().unwrap();
-                 if files_as_regex.is_match(&file_name) {
-                    println!("{}", entry.path().display().to_string());
+                if let Ok(metadata) = entry.metadata() {
+                    if metadata.is_dir() && (excluded_dirs.len() == 0 || !excluded_dirs.iter().any(|p| { p.is_match(entry.path().to_str().unwrap()) })) {
+                        check_for_files(&files_as_regex, &entry.path(), &excluded_dirs);
+                    }
+                    let file_name = entry.file_name().into_string().unwrap();
+                    if files_as_regex.is_match(&file_name) {
+                        println!("{}", entry.path().display().to_string());
+                    }
                 }
             }
         });
@@ -72,11 +70,9 @@ fn get_files_name_as_regex(file_name: &String) -> Regex {
             temp_regex.push_str(".*");
         } else if letter == '.' {
             temp_regex.push_str("\\.");
-        }
-            else if letter == ',' {
-                temp_regex.push_str(")?(");
-            }
-         else {
+        } else if letter == ',' {
+            temp_regex.push_str(")?(");
+        } else {
             temp_regex.push(letter);
         }
     }
