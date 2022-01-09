@@ -1,7 +1,7 @@
 use std::{env, fs, process};
 #[doc(inline)]
 pub use std;
-use std::path::{Path, PathBuf};
+use std::path::{PathBuf};
 
 use rayon::prelude::*;
 use regex;
@@ -45,7 +45,7 @@ fn get_formatted_args(args: Args) -> FormattedArgs {
     }
 }
 
-fn check_for_files(files_as_regex: &Regex, searched_directory: &Path, excluded_dirs: &Vec<Regex>) {
+fn check_for_files(files_as_regex: &Regex, searched_directory: &PathBuf, excluded_dirs: &Vec<Regex>) {
     if let Ok(entries) = fs::read_dir(searched_directory) {
         entries.par_bridge().for_each(|entry| {
             if let Ok(entry) = entry {
