@@ -80,17 +80,9 @@ fn get_files_name_as_regex(file_name: &String) -> Regex {
     regex::Regex::new(&temp_regex).expect("Cannot convert file_name to patter")
 }
 
-fn setup() {
-    let mut cpu_cores = num_cpus::get_physical();
-    if cpu_cores >= 4 { cpu_cores /= 1 };
-    rayon::ThreadPoolBuilder::new().num_threads(cpu_cores).build_global().unwrap();
-}
-
 fn main() {
-    setup();
+    // setup();
     let args = Args::parse();
     let args = get_formatted_args(args);
-    // let args = get_formatted_args(env::args());
-    // println!("{:#?}", args);
     check_for_files(&args.files_as_regex, &args.searched_directory, &args.excluded_dirs);
 }

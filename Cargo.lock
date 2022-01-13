@@ -292,7 +292,6 @@ name = "search_for"
 version = "0.1.0"
 dependencies = [
  "clap",
- "num_cpus",
  "rayon",
  "regex",
 ]
